@@ -1,0 +1,396 @@
+---
+title: "diss"
+author: "Yifang Zhang"
+date: "2021/8/18"
+output: pdf_document
+---
+
+```{r setup}
+#library(plotly)
+library(tidyr)
+library(dplyr)
+library(cowplot)
+library("tidyverse")
+library("emmeans")
+library(ggsignif)
+library("afex") 
+data <- read.csv(file = "IChing1.csv")
+data2 <- read.csv(file = "IChing2.csv")
+n_occur <- data.frame(table(data$Group))
+n_occur
+n_occur <- data.frame(table(data2$Group))
+n_occur
+colnames(data)[18] <- "prolific_id"
+colnames(data)[19] <- "exist_current_problem"
+colnames(data)[20] <- "exist_previous_problem"
+colnames(data)[21] <- "statement_pre_intent"
+colnames(data)[22] <- "no_statement_pre_intent"
+colnames(data)[27] <- "pre_treament_description"
+colnames(data)[28] <- "exist_pre_treament_solution"
+colnames(data)[36] <- "pre_treatment_solution1_rating"
+colnames(data)[37] <- "pre_treatment_solution2_rating"
+colnames(data)[38] <- "pre_treatment_solution3_rating"
+colnames(data)[39] <- "pre_treatment_solution4_rating"
+colnames(data)[40] <- "pre_treatment_solution5_rating"
+colnames(data)[41] <- "pre_treatment_solution6_rating"
+colnames(data)[42] <- "pre_treatment_solution7_rating"
+colnames(data)[55] <- "post_treament_description"
+colnames(data)[56] <- "exist_post_treament_solution"
+colnames(data)[57] <- "post_treatment_solution1_rating"
+colnames(data)[58] <- "post_treatment_solution2_rating"
+colnames(data)[59] <- "post_treatment_solution3_rating"
+colnames(data)[60] <- "post_treatment_solution4_rating"
+colnames(data)[61] <- "post_treatment_solution5_rating"
+colnames(data)[62] <- "post_treatment_solution6_rating"
+colnames(data)[63] <- "post_treatment_solution7_rating"
+colnames(data)[78] <- "post_treatment_new_solution1_rating"
+colnames(data)[79] <- "post_treatment_new_solution2_rating"
+colnames(data)[80] <- "post_treatment_new_solution3_rating"
+colnames(data)[81] <- "post_treatment_new_solution4_rating"
+colnames(data)[82] <- "post_treatment_new_solution5_rating"
+colnames(data)[83] <- "post_treatment_new_solution6_rating"
+colnames(data)[84] <- "post_treatment_new_solution7_rating"
+colnames(data)[85] <- "post_treatment_intent"
+colnames(data)[86] <- "divination_belief"
+colnames(data)[87] <- "divination_frequency"
+colnames(data)[89] <- "age"
+colnames(data)[90] <- "gender"
+colnames(data)[92] <- "education_level"
+colnames(data)[94] <- "treatment_group"
+
+colnames(data2)[18] <- "prolific_id"
+colnames(data2)[19] <- "exist_current_problem"
+colnames(data2)[20] <- "exist_previous_problem"
+colnames(data2)[21] <- "statement_pre_intent"
+colnames(data2)[22] <- "no_statement_pre_intent"
+colnames(data2)[27] <- "pre_treament_description"
+colnames(data2)[28] <- "exist_pre_treament_solution"
+colnames(data2)[36] <- "pre_treatment_solution1_rating"
+colnames(data2)[37] <- "pre_treatment_solution2_rating"
+colnames(data2)[38] <- "pre_treatment_solution3_rating"
+colnames(data2)[39] <- "pre_treatment_solution4_rating"
+colnames(data2)[40] <- "pre_treatment_solution5_rating"
+colnames(data2)[41] <- "pre_treatment_solution6_rating"
+colnames(data2)[42] <- "pre_treatment_solution7_rating"
+colnames(data2)[55] <- "post_treament_description"
+colnames(data2)[56] <- "exist_post_treament_solution"
+colnames(data2)[57] <- "post_treatment_solution1_rating"
+colnames(data2)[58] <- "post_treatment_solution2_rating"
+colnames(data2)[59] <- "post_treatment_solution3_rating"
+colnames(data2)[60] <- "post_treatment_solution4_rating"
+colnames(data2)[61] <- "post_treatment_solution5_rating"
+colnames(data2)[62] <- "post_treatment_solution6_rating"
+colnames(data2)[63] <- "post_treatment_solution7_rating"
+colnames(data2)[78] <- "post_treatment_new_solution1_rating"
+colnames(data2)[79] <- "post_treatment_new_solution2_rating"
+colnames(data2)[80] <- "post_treatment_new_solution3_rating"
+colnames(data2)[81] <- "post_treatment_new_solution4_rating"
+colnames(data2)[82] <- "post_treatment_new_solution5_rating"
+colnames(data2)[83] <- "post_treatment_new_solution6_rating"
+colnames(data2)[84] <- "post_treatment_new_solution7_rating"
+colnames(data2)[85] <- "post_treatment_intent"
+colnames(data2)[86] <- "divination_belief"
+colnames(data2)[87] <- "divination_frequency"
+colnames(data2)[89] <- "age"
+colnames(data2)[90] <- "gender"
+colnames(data2)[92] <- "education_level"
+colnames(data2)[101] <- "treatment_group"
+
+for (i in 0:6) {
+  for(j in 1:nrow(data)){
+    if (!(data[,71+i][j] == "")) {
+      data[,57+i][j] <- data[,71+i][j]
+    }
+  }
+} 
+
+#combining the gender
+for(j in 1:nrow(data)){
+    if ((data[,90][j]) == "") {
+      data[,90][j] <- data[,91][j]
+    }
+}
+for (i in 0:6) {
+  for(j in 1:nrow(data2)){
+    if (!(data2[,71+i][j] == "")) {
+      data2[,57+i][j] <- data2[,71+i][j]
+    }
+  }
+} 
+
+#combining the gender
+for(j in 1:nrow(data2)){
+    if ((data2[,90][j]) == "") {
+      data2[,90][j] <- data2[,91][j]
+    }
+  }
+data <- data %>%
+  mutate(intent_group = case_when(
+    statement_pre_intent == "" ~ "statement",
+    no_statement_pre_intent == "" ~ "no_statement"
+  ))
+data2 <- data2 %>%
+  mutate(intent_group = case_when(
+    statement_pre_intent == "" ~ "statement",
+    no_statement_pre_intent == "" ~ "no_statement"
+  ))
+
+```
+
+```{r data_cleaning_1}
+#delete first two rows
+data <- data[-1,]
+data2 <- data2[-1,]
+data <- data[-1,]
+data2 <- data2[-1,]
+
+dataAll <- data.frame(treatment_group = c(data[,"treatment_group"], data2[,"treatment_group"]),
+gender = c(data[,"gender"], data2[,"gender"]),
+divination_frequency = c(data[,"divination_frequency"], data2[,"divination_frequency"]),
+divination_belief = c(data[,"divination_belief"], data2[,"divination_belief"]),
+post_treatment_intent = c(data[,"post_treatment_intent"], data2[,"post_treatment_intent"]),
+post_treatment_new_solution7_rating = c(data[,"post_treatment_new_solution7_rating"], data2[,"post_treatment_new_solution7_rating"]),
+post_treatment_new_solution6_rating = c(data[,"post_treatment_new_solution6_rating"], data2[,"post_treatment_new_solution6_rating"]),
+post_treatment_new_solution5_rating = c(data[,"post_treatment_new_solution5_rating"], data2[,"post_treatment_new_solution5_rating"]),
+post_treatment_new_solution4_rating = c(data[,"post_treatment_new_solution4_rating"], data2[,"post_treatment_new_solution4_rating"]),
+post_treatment_new_solution3_rating = c(data[,"post_treatment_new_solution3_rating"], data2[,"post_treatment_new_solution3_rating"]),
+post_treatment_new_solution2_rating = c(data[,"post_treatment_new_solution2_rating"], data2[,"post_treatment_new_solution2_rating"]),
+post_treatment_new_solution1_rating = c(data[,"post_treatment_new_solution1_rating"], data2[,"post_treatment_new_solution1_rating"]),
+post_treatment_solution7_rating = 
+c(data[,"post_treatment_solution7_rating"], data2[,"post_treatment_solution7_rating"]),
+post_treatment_solution6_rating = 
+c(data[,"post_treatment_solution6_rating"], data2[,"post_treatment_solution6_rating"]),
+post_treatment_solution5_rating = 
+c(data[,"post_treatment_solution5_rating"], data2[,"post_treatment_solution5_rating"]),
+post_treatment_solution4_rating = 
+c(data[,"post_treatment_solution4_rating"], data2[,"post_treatment_solution4_rating"]),
+post_treatment_solution3_rating = 
+c(data[,"post_treatment_solution3_rating"], data2[,"post_treatment_solution3_rating"]),
+post_treatment_solution2_rating = 
+c(data[,"post_treatment_solution2_rating"], data2[,"post_treatment_solution2_rating"]),
+post_treatment_solution1_rating = 
+c(data[,"post_treatment_solution1_rating"], data2[,"post_treatment_solution1_rating"]),
+exist_post_treament_solution = 
+c(data[,"exist_post_treament_solution"], data2[,"exist_post_treament_solution"]),
+post_treament_description = 
+c(data[,"post_treament_description"], data2[,"post_treament_description"]),
+pre_treatment_solution7_rating = 
+c(data[,"pre_treatment_solution7_rating"], data2[,"pre_treatment_solution7_rating"]),
+pre_treatment_solution6_rating = 
+c(data[,"pre_treatment_solution6_rating"], data2[,"pre_treatment_solution6_rating"]),
+pre_treatment_solution5_rating = 
+c(data[,"pre_treatment_solution5_rating"], data2[,"pre_treatment_solution5_rating"]),
+pre_treatment_solution4_rating = 
+c(data[,"pre_treatment_solution4_rating"], data2[,"pre_treatment_solution4_rating"]),
+pre_treatment_solution3_rating = 
+c(data[,"pre_treatment_solution3_rating"], data2[,"pre_treatment_solution3_rating"]),
+pre_treatment_solution2_rating = 
+c(data[,"pre_treatment_solution2_rating"], data2[,"pre_treatment_solution2_rating"]),
+pre_treatment_solution1_rating = 
+c(data[,"pre_treatment_solution1_rating"], data2[,"pre_treatment_solution1_rating"]),
+exist_pre_treament_solution = 
+c(data[,"exist_pre_treament_solution"], data2[,"exist_pre_treament_solution"]),
+pre_treament_description = 
+c(data[,"pre_treament_description"], data2[,"pre_treament_description"]),
+no_statement_pre_intent = 
+c(data[,"no_statement_pre_intent"], data2[,"no_statement_pre_intent"]),
+statement_pre_intent = 
+c(data[,"statement_pre_intent"], data2[,"statement_pre_intent"]),
+exist_previous_problem = 
+c(data[,"exist_previous_problem"], data2[,"exist_previous_problem"]),
+exist_current_problem = 
+c(data[,"exist_current_problem"], data2[,"exist_current_problem"]),
+prolific_id = 
+c(data[,"prolific_id"], data2[,"prolific_id"]),
+intent_group = 
+c(data[,"intent_group"], data2[,"intent_group"]))
+for(j in 1:nrow(dataAll)){
+  if (dataAll$no_statement_pre_intent[j] == "") {
+    dataAll$no_statement_pre_intent[j] <- dataAll$statement_pre_intent[j]
+  }
+}
+```
+
+
+
+```{r creating_new_columns}
+
+dataAll$newSolutionNum <- 0
+dataAll$newSolution <- "no"
+dataAll$aveScoreChange <- 0
+
+for(j in 1:nrow(dataAll)){
+  n = 0
+  newSolutionScore = 0
+  oldPreSolutionScore = 0
+  oldPostSolutionScore = 0
+  oldNum = 0
+  for(i in 0:6){
+    if (!(dataAll[,12-i][j] == "")) {
+      n <- n + 1
+      newSolutionScore <- as.integer(dataAll[,12-i][j]) + newSolutionScore
+    }
+    if (!(dataAll[,28-i][j] == "")) {
+      oldNum <- oldNum + 1
+      oldPreSolutionScore <- as.integer(dataAll[,28-i][j]) + oldPreSolutionScore
+      
+    }
+    if (!(dataAll[,19-i][j] == "")) {
+      oldPostSolutionScore <- as.integer(dataAll[,19-i][j]) + oldPostSolutionScore
+    }
+  }
+  if(n > 0){
+    dataAll$newSolution[j] <- "yes"
+  }
+  dataAll$newSolutionNum[j] <- n
+  if(n+oldNum != 0){
+  dataAll$aveScoreChange[j] <- (newSolutionScore+oldPostSolutionScore-oldPreSolutionScore) / (n+oldNum)}
+}
+pretext <- get_sentences(dataAll$pre_treament_description)
+preSen<-sentiment_by(pretext)
+dataAll$preSentimentScore<-preSen$ave_sentiment
+posttext <- get_sentences(dataAll$post_treament_description)
+postSen<-sentiment_by(posttext)
+dataAll$postSentimentScore<-postSen$ave_sentiment
+dataAll$sentimentChange<-dataAll$postSentimentScore-dataAll$preSentimentScore
+dataAll<-dataAll[!dataAll$exist_previous_problem == "No", ]
+```
+
+
+```{r count_basic}
+IChing_group <- dataAll %>%
+  subset(treatment_group == "IChing")
+
+Control_group <- dataAll %>%
+  subset(treatment_group == "Control")
+
+statement_group <- dataAll %>%
+  subset(intent_group == "statement")
+
+no_statement_group <- dataAll %>%
+  subset(intent_group == "no_statement")
+
+IChing_statement_group <- dataAll %>%
+  subset(intent_group == "statement" & treatment_group == "IChing")
+
+IChing_no_statement_group <- dataAll %>%
+  subset(intent_group == "no_statement" & treatment_group == "IChing")
+
+Control_statement_group <- dataAll %>%
+  subset(intent_group == "statement" & treatment_group == "Control")
+
+Control_no_statement_group <- dataAll %>%
+  subset(intent_group == "no_statement" & treatment_group == "Control")
+
+IChing_newSolution_group <- dataAll %>%
+  subset(exist_post_treament_solution == "Yes" & treatment_group == "IChing")
+
+IChing_emotion_group <- dataAll %>%
+  subset(postSentimentScore > preSentimentScore & treatment_group == "IChing")
+
+Control_newSolution_group <- dataAll %>%
+  subset(exist_post_treament_solution == "Yes" & treatment_group == "Control")
+
+Control_emotion_group <- dataAll %>%
+  subset(postSentimentScore > preSentimentScore & treatment_group == "Control")
+
+message("num participants in IChing group: ", nrow(IChing_group))
+message("num participants in Control group: ", nrow(Control_group))
+message("num participants in statement group: ", nrow(statement_group))
+message("num participants in no_statement group: ", nrow(no_statement_group))
+message("num participants in IChing and statement group: ", nrow(IChing_statement_group))
+message("num participants in IChing and no_statement group: ", nrow(IChing_no_statement_group))
+message("num participants in Control and statement group: ", nrow(Control_statement_group))
+message("num participants in Control and no_statement group: ", nrow(Control_no_statement_group))
+message("num participants in Control and new: ", nrow(Control_newSolution_group))
+message("num participants in IChing and new: ", nrow(IChing_newSolution_group))
+message("num participants in Control and new: ", nrow(IChing_emotion_group))
+message("num participants in IChing and new: ", nrow(Control_emotion_group))
+n_occur <- data.frame(table(dataAll$no_statement_pre_intent))
+n_occur
+n_occur <- data.frame(table(data$no_statement_pre_intent))
+n_occur
+n_occur <- data.frame(table(data2$no_statement_pre_intent))
+n_occur
+```
+```{r}
+options(scipen = 999)
+require(ggplot2)
+require(ggsignif)
+dataIChing <- dataAll %>%
+  subset(treatment_group == "IChing")
+treatment_statement.ave <- aov(aveScoreChange ~ treatment_group * intent_group, data = dataAll)
+treatment_intension.ave <- aov(aveScoreChange ~ treatment_group * no_statement_pre_intent, data = dataAll)
+belief_frenquency.ave <- aov(aveScoreChange ~ divination_belief * divination_frequency, data = dataIChing)
+treatment_existSolution.ave <- aov(aveScoreChange ~ treatment_group * exist_pre_treament_solution, data = dataAll)
+
+summary(treatment_statement.ave)
+summary(treatment_intension.ave)
+summary(belief_frenquency.ave)
+summary(treatment_existSolution.ave)
+
+
+ggplot(dataAll, aes(x = treatment_group, y = aveScoreChange)) +
+  geom_boxplot(fill = "grey80", colour = "blue") +
+  scale_x_discrete() + xlab("treatment_group") +
+  ylab("Solution score changes")
+ggplot(dataAll, aes(x = no_statement_pre_intent, y = aveScoreChange)) +
+  geom_boxplot(fill = "grey80", colour = "blue") +
+  scale_x_discrete() + xlab("intention level") +
+  ylab("Solution score changes")
+ggplot(dataIChing, aes(x = divination_belief, y = aveScoreChange)) +
+  geom_boxplot(fill = "grey80", colour = "blue") +
+  scale_x_discrete() + xlab("divination_belief") +
+  ylab("Solution score changes")
+ggplot(dataAll, aes(x = exist_pre_treament_solution, y = aveScoreChange)) +
+  geom_boxplot(fill = "grey80", colour = "blue") +
+  scale_x_discrete() + xlab("exist_pre_treament_solution") +
+  ylab("Solution score changes")
+afex_plot(treatment_existSolution.ave, x = "treatment_group", trace = "exist_pre_treament_solution") 
+```
+
+
+```{r}
+treatment_statement.num <- aov(newSolutionNum ~ treatment_group * intent_group, data = dataAll)
+treatment_intension.num <- aov(newSolutionNum ~ treatment_group * no_statement_pre_intent, data = dataAll)
+belief_frenquency.num <- aov(newSolutionNum ~ divination_belief * divination_frequency, data = dataIChing)
+treatment_existSolution.num <- aov(newSolutionNum ~ treatment_group * exist_pre_treament_solution, data = dataAll)
+
+summary(treatment_statement.num)
+summary(treatment_intension.num)
+summary(belief_frenquency.num)
+summary(treatment_existSolution.num)
+
+ggplot(dataAll, aes(x = treatment_group, y = newSolutionNum)) +
+  geom_boxplot(fill = "grey80", colour = "blue") +
+  scale_x_discrete() + xlab("treatment_group") +
+  ylab("new solution number")
+ggplot(dataAll, aes(x = no_statement_pre_intent, y = newSolutionNum)) +
+  geom_boxplot(fill = "grey80", colour = "blue") +
+  scale_x_discrete() + xlab("intention") +
+  ylab("new solution number")
+ggplot(dataIChing, aes(x = divination_belief, y = newSolutionNum)) +
+  geom_boxplot(fill = "grey80", colour = "blue") +
+  scale_x_discrete() + xlab("divination_belief") +
+  ylab("new solution number")
+ggplot(dataAll, aes(x = exist_pre_treament_solution, y = newSolutionNum)) +
+  geom_boxplot(fill = "grey80", colour = "blue") +
+  scale_x_discrete() + xlab("exist_pre_treament_solution") +
+  ylab("new solution number")
+afex_plot(treatment_existSolution.num, x = "treatment_group", trace = "exist_pre_treament_solution") 
+```
+
+
+```{r}
+
+treatment_statement.sen <- aov(sentimentChange ~ treatment_group * intent_group, data = dataAll)
+treatment_intension.sen <- aov(sentimentChange ~ treatment_group * no_statement_pre_intent, data = dataAll)
+belief_frenquency.sen <- aov(sentimentChange ~ divination_belief * divination_frequency, data = dataIChing)
+treatment_existSolution.sen <- aov(sentimentChange ~ treatment_group * exist_pre_treament_solution, data = dataAll)
+
+summary(treatment_statement.sen)
+summary(treatment_intension.sen)
+summary(belief_frenquency.sen)
+summary(treatment_existSolution.sen)
+```
+
